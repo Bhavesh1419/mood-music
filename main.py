@@ -1,28 +1,27 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
-import random
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Mood-based song database (Example data)
-songs_db = {
-    "happy": ["Happy - Pharrell Williams", "Can't Stop the Feeling - Justin Timberlake", "Shake It Off - Taylor Swift"],
-    "sad": ["Someone Like You - Adele", "Fix You - Coldplay", "Stay With Me - Sam Smith"],
-    "energetic": ["Eye of the Tiger - Survivor", "Stronger - Kanye West", "We Will Rock You - Queen"],
-    "calm": ["Weightless - Marconi Union", "Thinking Out Loud - Ed Sheeran", "Better Together - Jack Johnson"]
-}
+# Enable CORS to allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to your frontend URL for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class MoodRequest(BaseModel):
-    mood: str
+@app.get("/recommend")
+def recommend(mood: str):  # Ensures 'mood' matches frontend query
+    mood = mood.lower()  # Normalize input
 
-@app.get("/")
-def home():
-    return {"message": "Welcome to Mood-Based Song Recommender!"}
+    mood_songs = {
+        "happy": ["Happy - Pharrell Williams", "Can't Stop the Feeling - Justin Timberlake"],
+        "sad": ["Someone Like You - Adele", "Fix You - Coldplay"],
+        "excited": ["Uptown Funk - Bruno Mars", "Don't Stop Me Now - Queen"],
+        "relaxed": ["Weightless - Marconi Union", "Clair de Lune - Debussy"],
+    }
 
-@app.post("/recommend", response_model=List[str])
-def recommend_songs(request: MoodRequest):
-    mood = request.mood.lower()
-    if mood in songs_db:
-        return random.sample(songs_db[mood], min(len(songs_db[mood]), 3))  # Return up to 3 songs
-    return ["No songs found for this mood."]
+    return {"songs": mood_songs.get(mood, ["No recommendations available"])}
+
