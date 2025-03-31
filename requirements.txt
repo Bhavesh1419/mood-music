@@ -4,3 +4,4 @@ pydantic
 requests
 sqlalchemy
 openai
+python-dotenv
